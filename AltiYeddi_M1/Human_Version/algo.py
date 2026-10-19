@@ -27,12 +27,13 @@ class Algorithms:
         if name not in methods:
             return SearchResult(name, success=False, message="Unknown algorithm.")
 
-        # Time only the algorithm. The GUI animation is not included.
+        # Time only the selected search algorithm. GUI animation is excluded.
         start_time = time.perf_counter()
         result = methods[name](problem)
         elapsed_time = time.perf_counter() - start_time
 
-        # This also protects the interface if a student temporarily uses pass.
+        # A method containing only pass returns None. Keep the map usable while
+        # students are still implementing that algorithm.
         if result is None:
             result = SearchResult(
                 name,
@@ -51,24 +52,162 @@ class Algorithms:
         )
 
     def bfs(self, problem):
-        #create code to implement Breadth-First Search
-        return self._not_implemented("Breadth-First Search")
+        name = "Breadth-First Search"
+        start = problem.initial_state()
+        frontier = deque([start])
+        visited = {start}
+        parent = {start: None}
+        costs = {start: 0}
+        order = []
+
+        while frontier:
+            # The queue makes us explore the oldest waiting state first.
+            current = frontier.popleft()
+            order.append(current)
+
+            if problem.goal_test(current):
+                return self._success(name, current, parent, order, costs[current])
+
+            for child in problem.successors(current):
+                if child not in visited:
+                    visited.add(child)
+                    parent[child] = current
+                    costs[child] = costs[current] + problem.step_cost(current, child)
+                    frontier.append(child)
+
+        return self._failure(name, order)
 
     def dfs(self, problem):
-        #create code to implement Depth-First Search
-        return self._not_implemented("Depth-First Search")
+        name = "Depth-First Search"
+        start = problem.initial_state()
+        frontier = [start]
+        visited = {start}
+        parent = {start: None}
+        costs = {start: 0}
+        order = []
+
+        while frontier:
+            # The stack makes us explore the newest waiting state first.
+            current = frontier.pop()
+            order.append(current)
+
+            if problem.goal_test(current):
+                return self._success(name, current, parent, order, costs[current])
+
+            for child in problem.successors(current):
+                if child not in visited:
+                    visited.add(child)
+                    parent[child] = current
+                    costs[child] = costs[current] + problem.step_cost(current, child)
+                    frontier.append(child)
+
+        return self._failure(name, order)
 
     def ucs(self, problem):
-        #create code to implement Dijkstra's Search
-        return self._not_implemented("Dijkstra's Search")
+        name = "Uniform-Cost Search"
+        start = problem.initial_state()
+        frontier = [(0, start)]
+        costs = {start: 0}
+        parent = {start: None}
+        visited = set()
+        order = []
+
+        while frontier:
+            # Find the state with the lowest path cost in the frontier.
+            lowest_index = 0
+            for i in range(1, len(frontier)):
+                if frontier[i][0] < frontier[lowest_index][0]:
+                    lowest_index = i
+
+            cost, current = frontier.pop(lowest_index)
+
+            if current in visited:
+                continue
+            visited.add(current)
+            order.append(current)
+
+            if problem.goal_test(current):
+                return self._success(name, current, parent, order, cost)
+
+            for child in problem.successors(current):
+                new_cost = cost + problem.step_cost(current, child)
+                # Only add this route if it is cheaper than the best one found so far.
+                if child not in visited and new_cost < costs.get(child, float("inf")):
+                    costs[child] = new_cost
+                    parent[child] = current
+                    frontier.append((new_cost, child))
+
+        return self._failure(name, order)
 
     def greedy(self, problem):
-        #create code to implement Greedy Search
-        return self._not_implemented("Greedy Best-First Search")
+        name = "Greedy Best-First Search"
+        start = problem.initial_state()
+        frontier = [(problem.heuristic(start), start)]
+        parent = {start: None}
+        costs = {start: 0}
+        visited = set()
+        order = []
+
+        while frontier:
+            # Greedy search picks the state that seems closest to the goal.
+            lowest_index = 0
+            for i in range(1, len(frontier)):
+                if frontier[i][0] < frontier[lowest_index][0]:
+                    lowest_index = i
+
+            _, current = frontier.pop(lowest_index)
+
+            if current in visited:
+                continue
+            visited.add(current)
+            order.append(current)
+
+            if problem.goal_test(current):
+                return self._success(name, current, parent, order, costs[current])
+
+            for child in problem.successors(current):
+                if child not in visited and child not in parent:
+                    parent[child] = current
+                    costs[child] = costs[current] + problem.step_cost(current, child)
+                    frontier.append((problem.heuristic(child), child))
+
+        return self._failure(name, order)
 
     def astar(self, problem):
-        #create code to implement A* Search
-        return self._not_implemented("A* Search")
+        name = "A* Search"
+        start = problem.initial_state()
+        frontier = [(problem.heuristic(start), start)]
+        costs = {start: 0}
+        parent = {start: None}
+        visited = set()
+        order = []
+
+        while frontier:
+            # Find the state with the smallest estimated total cost.
+            lowest_index = 0
+            for i in range(1, len(frontier)):
+                if frontier[i][0] < frontier[lowest_index][0]:
+                    lowest_index = i
+
+            _, current = frontier.pop(lowest_index)
+
+            if current in visited:
+                continue
+            visited.add(current)
+            order.append(current)
+
+            if problem.goal_test(current):
+                return self._success(name, current, parent, order, costs[current])
+
+            for child in problem.successors(current):
+                new_cost = costs[current] + problem.step_cost(current, child)
+                if child not in visited and new_cost < costs.get(child, float("inf")):
+                    costs[child] = new_cost
+                    parent[child] = current
+                    total_cost = new_cost + problem.heuristic(child)
+                    frontier.append((total_cost, child))
+
+        return self._failure(name, order)
 
     def _success(self, name, goal, parent, order, cost=None):
         path, current = [], goal

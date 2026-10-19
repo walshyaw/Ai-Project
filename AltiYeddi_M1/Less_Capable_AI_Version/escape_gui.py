@@ -98,7 +98,10 @@ class EscapeRoomGUI:
 
         if self.result:
             self.algorithm.set(
-                "Algorithm: {self.result.algorithm_name}"
+                f"Algorithm: {self.result.algorithm_name}"
+            )
+            self.runtime.set(
+                f"Runtime: {self.result.runtime_seconds:.9f} sec"
             )
 
             self.status.set(

@@ -27,12 +27,13 @@ class Algorithms:
         if name not in methods:
             return SearchResult(name, success=False, message="Unknown algorithm.")
 
-        # Time only the algorithm. The GUI animation is not included.
+        # Time only the selected search algorithm. GUI animation is excluded.
         start_time = time.perf_counter()
         result = methods[name](problem)
         elapsed_time = time.perf_counter() - start_time
 
-        # This also protects the interface if a student temporarily uses pass.
+        # A method containing only pass returns None. Keep the map usable while
+        # students are still implementing that algorithm.
         if result is None:
             result = SearchResult(
                 name,

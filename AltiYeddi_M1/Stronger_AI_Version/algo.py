@@ -30,9 +30,22 @@ class Algorithms:
         }
         if name not in methods:
             return SearchResult(name, success=False, message="Unknown algorithm.")
+
+        # Time only the selected search algorithm. GUI animation is excluded.
         start_time = time.perf_counter()
         result = methods[name](problem)
-        result.runtime_seconds = time.perf_counter() - start_time
+        elapsed_time = time.perf_counter() - start_time
+
+        # A method containing only pass returns None. Keep the map usable while
+        # students are still implementing that algorithm.
+        if result is None:
+            result = SearchResult(
+                name,
+                success=False,
+                message=f"{name} has not been implemented yet.",
+            )
+
+        result.runtime_seconds = elapsed_time
         return result
 
     def bfs(self, problem):
