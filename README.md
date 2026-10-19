@@ -133,7 +133,18 @@ Results are from one framework-timed run per algorithm on each version's bundled
 
 | Algorithm | AI version | Prompt or prompt ID | What the model produced | What your team changed and why |
 |-----------|------------|---------------------|-------------------------|--------------------------------|
-|           |            |                     |                         |                                |
+| BFS | DeepSeek Flash 4.1 (less-capable) | Common search prompt* | Queue-based BFS; tracks discovered states and parents. | No revisions recorded. |
+| BFS | Claude Sonnet 5.5 (stronger) | Common search prompt* | Queue-based BFS; returns path and search metrics. | No revisions recorded. |
+| DFS | DeepSeek Flash 4.1 (less-capable) | Common search prompt* | Stack-based DFS; tracks parents and path costs. | No revisions recorded. |
+| DFS | Claude Sonnet 5.5 (stronger) | Common search prompt* | Stack-based DFS with deterministic successor ordering. | No revisions recorded. |
+| UCS | DeepSeek Flash 4.1 (less-capable) | Common search prompt* | Cost-priority search using a heap and tie-breaker. | No revisions recorded. |
+| UCS | Claude Sonnet 5.5 (stronger) | Common search prompt* | Cost-priority search; ignores outdated heap entries. | No revisions recorded. |
+| Greedy | DeepSeek Flash 4.1 (less-capable) | Common search prompt* | Heuristic-priority search using a heap. | No revisions recorded. |
+| Greedy | Claude Sonnet 5.5 (stronger) | Common search prompt* | Heuristic-priority search with tracked path costs. | No revisions recorded. |
+| A* | DeepSeek Flash 4.1 (less-capable) | Common search prompt* | Uses g(n) + h(n) priority and a heap. | No revisions recorded. |
+| A* | Claude Sonnet 5.5 (stronger) | Common search prompt* | Uses g(n) + h(n); updates cheaper routes. | No revisions recorded. |
+
+*Common search prompt: “Implement [algorithm] in the provided algo.py framework. Use the problem interface, return a SearchResult with a valid path and search metrics, handle failure, and comment the major steps.”
 
 ## Algorithm Requirements
 
