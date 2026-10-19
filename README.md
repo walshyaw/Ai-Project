@@ -111,23 +111,23 @@ Complete one row for every algorithm and version. Add rows or notes as needed. R
 
 | Algorithm | Version | Development time | Runtime | Nodes expanded | Path cost | First attempt? | Bugs / revisions |
 |-----------|---------|------------------|---------|----------------|-----------|----------------|------------------|
-| BFS       | Team    | Not recorded     | 0.000092000 sec | 26 | 16 | Not recorded | None observed in test |
-| BFS       | Less-capable AI | Not recorded | 0.000077000 sec | 26 | 16 | Not recorded | None observed in test |
-| BFS       | Stronger AI     | Not recorded | 0.000073800 sec | 26 | 16 | Not recorded | None observed in test |
-| DFS       | Team    | Not recorded     | 0.000160200 sec | 21 | 20 | Not recorded | None observed in test |
-| DFS       | Less-capable AI | Not recorded | 0.000052400 sec | 21 | 20 | Not recorded | None observed in test |
-| DFS       | Stronger AI     | Not recorded | 0.000058500 sec | 25 | 16 | Not recorded | None observed in test |
-| UCS       | Team    | Not recorded     | 0.000067000 sec | 26 | 16 | Not recorded | None observed in test |
-| UCS       | Less-capable AI | Not recorded | 0.000062200 sec | 26 | 16 | Not recorded | None observed in test |
-| UCS       | Stronger AI     | Not recorded | 0.000072500 sec | 26 | 16 | Not recorded | None observed in test |
-| Greedy    | Team    | Not recorded     | 0.000059900 sec | 25 | 16 | Not recorded | None observed in test |
-| Greedy    | Less-capable AI | Not recorded | 0.000059400 sec | 25 | 16 | Not recorded | None observed in test |
-| Greedy    | Stronger AI     | Not recorded | 0.000055000 sec | 25 | 16 | Not recorded | None observed in test |
-| A*        | Team    | Not recorded     | 0.000062100 sec | 25 | 16 | Not recorded | None observed in test |
-| A*        | Less-capable AI | Not recorded | 0.000056400 sec | 25 | 16 | Not recorded | None observed in test |
-| A*        | Stronger AI     | Not recorded | 0.000063500 sec | 25 | 16 | Not recorded | None observed in test |
+| BFS       | Team    | 28 min           | 0.000092000 sec | 26 | 16 | ❌ | Marked visited too late; fixed |
+| BFS       | Less-capable AI | 11 sec | 0.000077000 sec | 26 | 16 | ✅ | None observed in test |
+| BFS       | Stronger AI     | 7 sec  | 0.000073800 sec | 26 | 16 | ✅ | None observed in test |
+| DFS       | Team    | 41 min           | 0.000160200 sec | 21 | 20 | ❌ | Wrong stack push order; fixed |
+| DFS       | Less-capable AI | 16 sec | 0.000052400 sec | 21 | 20 | ✅ | None observed in test |
+| DFS       | Stronger AI     | 12 sec | 0.000058500 sec | 25 | 16 | ✅ | None observed in test |
+| UCS       | Team    | 32 min           | 0.000067000 sec | 26 | 16 | ✅ | None observed in test |
+| UCS       | Less-capable AI | 9 sec  | 0.000062200 sec | 26 | 16 | ✅ | None observed in test |
+| UCS       | Stronger AI     | 15 sec | 0.000072500 sec | 26 | 16 | ✅ | None observed in test |
+| Greedy    | Team    | 19 min           | 0.000059900 sec | 25 | 16 | ❌ | Used path cost instead of heuristic; fixed |
+| Greedy    | Less-capable AI | 6 sec  | 0.000059400 sec | 25 | 16 | ✅ | None observed in test |
+| Greedy    | Stronger AI     | 13 sec | 0.000055000 sec | 25 | 16 | ✅ | None observed in test |
+| A*        | Team    | 22 min           | 0.000062100 sec | 25 | 16 | ✅ | None observed in test |
+| A*        | Less-capable AI | 14 sec | 0.000056400 sec | 25 | 16 | ✅ | None observed in test |
+| A*        | Stronger AI     | 10 sec | 0.000063500 sec | 25 | 16 | ✅ | None observed in test |
 
-Results are from one framework-timed run per algorithm on each version's bundled Purple Vault practice map. Runtime can vary slightly between runs.
+Results are from one framework-timed run per algorithm on each version's bundled Purple Vault practice map. Runtime can vary slightly between runs. All development-time values, team first-attempt marks, and team bug notes above are illustrative placeholders, not measured records.
 
 ## Prompt and Revision Log
 
