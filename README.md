@@ -1,4 +1,4 @@
-# CSC 3250 | Artificial Intelligence — Semester Project: Milestone 1
+# CSC 3250 | Artificial Intelligence | Semester Project: Milestones 1 & 2
 
 **High Point University • CSC 3250**
 
@@ -8,9 +8,9 @@
 
 | Member | Responsibility |
 |--------|----------------|
-| Sara   | Part 2 — Algorithms from the less-capable AI model |
-| Shlok  | Part 3 — Algorithms from the stronger AI model |
-| Alex   | Part 1 — Team's own algorithm implementations |
+| Sara   | Part 2: Algorithms from the less-capable AI model |
+| Shlok  | Part 3: Algorithms from the stronger AI model |
+| Alex   | Part 1: Team's own algorithm implementations |
 
 ## Milestone Purpose
 
@@ -176,28 +176,108 @@ Competition categories:
 - Fewest nodes expanded
 - Overall search champion
 
-## Presentation Day: Tuesday, October 20
+---
 
-Your team will receive a different map on presentation day. You will load that map into the provided framework and demonstrate each completed algorithm. **The map will not be released in advance.**
+## Milestone 2: Designing Search Intelligence
 
-- Be ready to identify which version of the code you are demonstrating.
-- Explain the frontier, visited-state handling, goal test, and path reconstruction.
-- Show the recorded runtime, nodes expanded, and path cost.
-- Be prepared to discuss one meaningful difference among the three versions.
-- Every team member should be able to answer questions about the code.
+**100 points | Due date: to be announced with the presentation schedule.**
 
-## Submission Checklist
+In Milestone 2 the escape-room environment gains a key (`K`), a locked door (`D`), and treasures (`T`). Reaching the exit is still mandatory, but the team must now decide whether collecting treasure is worth the added search effort and travel cost. Our Milestone 1 algorithms are preserved as comparison baselines, one new known algorithm was added, and one original team-designed algorithm was created.
 
-- [ ] All five algorithms are implemented in the team-created version.
-- [ ] All five algorithms are generated and tested with a less-capable AI model.
-- [ ] All five algorithms are generated and tested with a stronger AI model.
-- [ ] The three versions are saved separately and clearly labeled.
-- [ ] Prompts and original AI outputs are preserved.
-- [ ] Runtime, nodes expanded, path cost, development time, and debugging notes are recorded.
-- [ ] Your algorithm code includes useful comments.
-- [ ] The program runs locally through `python3 run.py` or `python run.py`.
-- [ ] The team is prepared for the mystery-map demonstration on October 20.
+### Milestone 2 Contributions
 
-## Reminder
+| Member | Responsibility |
+|--------|----------------|
+| Sara   | Part 1: Chosen known algorithm (Weighted A*) |
+| Shlok  | Part 2: Original team-designed algorithm (ATTS) |
+| Alex   | Part 3: Baseline re-tests and results log |
 
-This is Milestone 1, not the complete semester project. The framework and algorithms will be extended as we study additional AI topics. Build and document this foundation carefully because your team will use it again.
+### Repository Layout
+
+```
+AltiYeddi_M2/
+├── Weighted_A_star/                        # Part 1 build (also carries the 5 baselines)
+└── Adaptive_Treasure_Threshold_Search/     # Part 2 build (also carries the 5 baselines)
+```
+
+Both folders are self-contained and runnable. Run either one locally with `python run.py` (or `python3 run.py` on macOS/Linux). Each `algo.py` exposes all seven algorithms in the dropdown: the five Milestone 1 baselines (unchanged from the team's `AltiYeddi_M1/Human_Version`) plus that folder's new algorithm, so every entry of the results log can be collected from a single app instance using identical maps and clean resets.
+
+Framework notes (M2 update): `state.py` now carries `has_key`, `escape_room.py` spawns successor states that pick up `K` automatically and refuse to pass `D` without it, and the GUI displays a "Key collected" readout. The only edited file is `algo.py`.
+
+### Part 1: Chosen Known Algorithm: Weighted A* Search
+
+Implemented by Sara in `AltiYeddi_M2/Weighted_A_star/algo.py`.
+
+- **Name and source:** Weighted A* (W-A*), learned from the standard textbook treatment (Russell & Norvig, *Artificial Intelligence: A Modern Approach*, informed search chapter).
+- **Frontier / selection strategy:** a binary min-heap priority queue ordered by `f = g + w·h` with `w = 2.0`. Ties are broken by an insertion counter so behavior stays deterministic.
+- **Costs and heuristics:** `g` accumulates `problem.step_cost(...)`; `h` is the framework's Manhattan distance to the exit; the heuristic is multiplied by the weight, biasing expansion toward states that look closer to the goal.
+- **Why it may differ from the Milestone 1 algorithms:** with `w = 1` A* is optimal in path cost; inflating `h` sacrifices that guarantee in exchange for fewer expansions on obstacle-sparse maps. It contrasts with BFS/DFS (cost-blind), UCS (no heuristic), and Greedy (no path-cost term).
+- **Strength:** often reaches the exit faster and with fewer expansions than plain A* while remaining a drop-in replacement on the same interface.
+- **Limitation:** no optimality guarantee; with a large weight it degenerates toward Greedy behavior and can return noticeably costlier paths.
+
+### Part 2: Team-Designed Algorithm: Adaptive Treasure Threshold Search (ATTS)
+
+Implemented by Shlok in `AltiYeddi_M2/Adaptive_Treasure_Threshold_Search/algo.py`.
+
+- **Name:** *Adaptive Treasure Threshold Search*: the search adapts its priorities to the run's progress (no key yet / key in hand) and uses a proximity **threshold** to decide when a treasure is worth steering toward.
+- **Objective:** escape **with the key** while collecting treasure whenever a nearby treasure justifies a detour, balancing treasure points against path cost and search effort.
+- **State identity:** `(row, column, has_key, frozenset(collected treasure positions))`, so the same cell counts as a different state depending on key possession and loot already gathered.
+- **Decision process (pseudocode):**
+  1. Pre-scan the grid once and record every `T` tile as a treasure.
+  2. Push the start state with priority `0`.
+  3. Pop the lowest-priority state; discard stale heap entries whose recorded `g` no longer matches `best_cost`.
+  4. If the state is the exit **and** holds the key, reconstruct the path through parent links and return success (treasure count included in the message).
+  5. Otherwise expand legal successors via `problem.successors(...)` (walls and locked-door legality come from the framework).
+  6. For each child: add its tile to the collected set if it is a treasure; compute `g_new = g + step_cost`; skip if not strictly cheaper than the best known cost for that child's identity.
+  7. Score the child with the priority formula below and push it with a tie-breaker.
+  8. If the frontier empties without a keyed goal, return failure.
+- **Priority formula (how states are ranked):**
+
+  ```
+  priority = g
+           + exit_weight · h(child)                        # pull toward the exit
+           − 8.0 · [child.has_key]                          # bonus for holding the key
+           − 3.0 · |collected treasures|                    # reward per treasure banked
+           − 1.5 · best_nearby_ratio                        # magnet for close, uncollected treasure
+  ```
+
+  where `exit_weight = 0.6` before the key is found (deliberate exploration phase), `2.0` after pickup, and `2.2` once the key and at least one treasure are held (rush-out phase), and `best_nearby_ratio = max over uncollected treasures of 1/(Manhattan distance + 1)` kept only when the ratio ≥ `0.25`: the *threshold* that bounds treasure attraction to roughly Manhattan distance 3 and stops far-away loot from luring long detours.
+- **How the objective is valued:** the exit is a hard end condition (weighted, ramping up after the key); treasure is a soft reward with distance-thresholded attraction; runtime is bounded by the threshold and by best-cost pruning; path cost enters directly through `g` so shorter routes stay preferred; exploration is encouraged pre-key via the lowered exit weight.
+- **Strengths:** guarantees the key before declaring success; treasure-aware without enormous state growth on normal maps; deterministic; swaps priorities adaptively as the run progresses.
+- **Weaknesses:** the subtractive bonuses break A*-style optimality (it can return costlier paths than A*); treasure-augmented states expand more nodes than plain A*; constants are hand-tuned for small grids; the collected-set dimension grows exponentially when many treasures exist.
+- **Failure cases:** a treasure cluster pulling the agent away from the key side of the map wastes pre-key exploration; maps with many treasures can blow up the state space; on maps with no treasure the extra bookkeeping is pure overhead.
+- **How it differs from the Part 1 algorithm:** Weighted A* applies one fixed inflator (`w = 2`) on a single heuristic aimed at the exit and treats key/treasure only through framework legality; ATTS uses progress-dependent weights plus explicit bonus terms for the key and treasure, and searches over an augmented state space that remembers which treasures were collected.
+
+### Part 3: Baseline Comparison (Milestone 2 Results Log)
+
+The five Milestone 1 algorithms were ported unchanged into both Milestone 2 builds and re-tested on the same bundled Purple Vault map (`K`, `D`, and one `T`). Baselines in both builds are byte-identical code, so node counts, path costs, and treasure counts reproduce exactly; runtimes vary between runs.
+
+Measurements below were collected with the framework's own timing (`Algorithms.solve`, `time.perf_counter`, GUI animation excluded) in headless runs on the practice map. **Score is left blank until the instructor announces the official treasure value with the competition map.**
+
+| Algorithm | Trial | Escaped? | Runtime (sec) | Nodes expanded | Path cost | Treasures | Score | Notes |
+|-----------|-------|----------|---------------|----------------|-----------|-----------|-------|-------|
+| BFS | 1 | Yes | 0.000128300 | 26 | 16 | 1 | TBD | Treasure lies on the shortest route |
+| BFS | 2 | Yes | 0.000087800 | 26 | 16 | 1 | TBD | |
+| BFS | 3 | Yes | 0.000064000 | 26 | 16 | 1 | TBD | |
+| DFS | 1 | Yes | 0.000056700 | 21 | 20 | 1 | TBD | Deep corridor route, costlier path |
+| DFS | 2 | Yes | 0.000052300 | 21 | 20 | 1 | TBD | |
+| DFS | 3 | Yes | 0.000050200 | 21 | 20 | 1 | TBD | |
+| UCS | 1 | Yes | 0.000078100 | 26 | 16 | 1 | TBD | |
+| UCS | 2 | Yes | 0.000069600 | 26 | 16 | 1 | TBD | |
+| UCS | 3 | Yes | 0.000067300 | 26 | 16 | 1 | TBD | |
+| Greedy | 1 | Yes | 0.000072600 | 25 | 16 | 1 | TBD | |
+| Greedy | 2 | Yes | 0.000066000 | 25 | 16 | 1 | TBD | |
+| Greedy | 3 | Yes | 0.000065100 | 25 | 16 | 1 | TBD | |
+| A* | 1 | Yes | 0.000077600 | 25 | 16 | 1 | TBD | |
+| A* | 2 | Yes | 0.000072500 | 25 | 16 | 1 | TBD | |
+| A* | 3 | Yes | 0.000071300 | 25 | 16 | 1 | TBD | |
+| Weighted A* (known) | 1 | Yes | 0.000076700 | 25 | 16 | 1 | TBD | Same expansion count as A* on this small map |
+| Weighted A* (known) | 2 | Yes | 0.000067700 | 25 | 16 | 1 | TBD | |
+| Weighted A* (known) | 3 | Yes | 0.000064400 | 25 | 16 | 1 | TBD | |
+| ATTS (team-designed) | 1 | Yes | 0.000103800 | 34 | 20 | 1 | TBD | Exits only with the key held; measured in its own build |
+| ATTS (team-designed) | 2 | Yes | 0.000086800 | 34 | 20 | 1 | TBD | |
+| ATTS (team-designed) | 3 | Yes | 0.000115300 | 34 | 20 | 1 | TBD | |
+
+**Reading the log:** on this practice map the exit can be reached without using the door, so the baselines and Weighted A* take the direct 16-step route (collecting the treasure only because it happens to sit on it). ATTS is the only algorithm that refuses to accept the exit without the key, so it detours to `K` first, costs 20 steps, and expands more nodes (34), the price of key certainty plus treasure-seeking. On a mystery map where the exit sits behind the locked door, the key-unaware algorithms still escape (the framework makes them pick up the key incidentally), but ATTS is the only one that treats the key as a first-class objective, and it will keep collecting treasure the others ignore.
+
+No method in this milestone uses randomness, so the three-trials-per-algorithm requirement is satisfied with deterministic repeats (identical nodes/costs across trials; runtime jitter only).
